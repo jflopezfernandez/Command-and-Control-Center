@@ -2,7 +2,7 @@
 vpath %.cpp src
 
 CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -Weffc++ -Og -ggdb
+CXXFLAGS := -std=c++2a -Wall -Wextra -Weffc++ -Og -ggdb
 CPPFLAGS := -I include
 LDFLAGS :=
 LIBS := -lboost_program_options
