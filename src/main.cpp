@@ -6,6 +6,8 @@
 #include <assert.h>
 
 #include <iostream>
+#include <string>
+#include <string_view>
 
 #include <unistd.h>
 #include <netdb.h>
@@ -16,15 +18,52 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-int main(void)
+#include <boost/program_options.hpp>
+
+namespace Options = boost::program_options;
+
+int main(int argc, char *argv[])
 {
+    Options::options_description generic_options("Generic");
+    generic_options.add_options()
+        ("help", "Display this help menu and exit")
+        ("version", "Display program version information")
+    ;
+
+    std::string port_number = "8080";
+
+    Options::options_description runtime_configuration("Runtime Configuration");
+    runtime_configuration.add_options()
+        ("port", Options::value<std::string>(&port_number)->default_value("8080"), "The port the server should listen for connections on")
+    ;
+    
+    Options::options_description program_options("Program Options");
+    program_options
+        .add(runtime_configuration)
+        .add(generic_options)
+    ;
+
+    Options::variables_map variables_map;
+    Options::store(Options::parse_command_line(argc, argv, program_options), variables_map);
+    Options::notify(variables_map);
+
+    if (variables_map.count("help")) {
+        std::cout << program_options << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    if (variables_map.count("version")) {
+        std::cout << "<Program Version Information>" << std::endl;
+        return EXIT_SUCCESS;
+    }
+
     struct addrinfo hints;
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
     struct addrinfo* bind_address = NULL;
-    getaddrinfo(0, "8080", &hints, &bind_address);
+    getaddrinfo(0, port_number.c_str(), &hints, &bind_address);
 
     int listener_socket = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
 
